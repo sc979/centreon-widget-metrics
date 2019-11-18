@@ -55,10 +55,70 @@ if (!isset($_REQUEST['widgetId'])) {
 $centreon = $_SESSION['centreon'];
 $widgetId = $_REQUEST['widgetId'];
 
-$path = $centreon_path . 'www/widgets/metrics/';
+try {
+    global $pearDB;
+
+    $pearDB = $dbAcl = $db = $dependencyInjector['configuration_db'];
+    $db2 = $dependencyInjector['realtime_db'];
+
+    $widgetObj = new CentreonWidget($centreon, $db);
+    $preferences = $widgetObj->getWidgetPreferences($widgetId);
+    $autoRefresh = 0;
+
+    if (isset($preferences['refresh_interval'])) {
+        $autoRefresh = $preferences['refresh_interval'];
+    }
+} catch (Exception $e) {
+    echo $e->getMessage() . "<br/>";
+    exit;
+}
+
+if ($centreon->user->admin == 0) {
+    $access = new CentreonACL($centreon->user->get_id());
+    $grouplist = $access->getAccessGroups();
+    $grouplistStr = $access->getAccessGroupsString();
+}
+
+$path = $centreon_path . 'www/widgets/graph-monitoring-apex/src/';
 $template = new Smarty();
 $template = initSmartyTplForPopup($path, $template, "/", $centreon_path);
 
-$template->assign('widgetId', $widgetId);
+/*
+* Check ACL
+*/
 
-$template->display('index.html');
+$acl = 1;
+if (isset($tab[0]) && isset($tab[1]) && $centreon->user->admin == 0) {
+    $res = $dbAcl->query(
+        "SELECT host_id
+        FROM centreon_acl
+        WHERE host_id = " . $dbAcl->escape($tab[0]) . "
+            AND service_id = " . $dbAcl->escape($tab[1]) . "
+            AND group_id IN (" . $grouplistStr . ")"
+    );
+    if (!$res->rowCount()) {
+        $acl = 0;
+    }
+}
+
+$servicePreferences = '';
+
+if ($acl === 0) {
+    $servicePreferences = '';
+} elseif (false === isset($preferences['service']) || trim($preferences['service']) === '') {
+    $servicePreferences = "<div class='update' style='text-align:center;margin-left: auto;margin-right: " .
+        "auto;width:350px;'>" . _("Please select a resource first") . "</div>";
+} elseif (false === isset($preferences['graph_period']) || trim($preferences['graph_period']) === '') {
+    $servicePreferences = "<div class='update' style='text-align:center;margin-left: auto;margin-right: " .
+        "auto;width:350px;'>" . _("Please select a graph period") . "</div>";
+}
+
+$autoRefresh = $preferences['refresh_interval'];
+$template->assign('widgetId', $widgetId);
+$template->assign('preferences', $preferences);
+$template->assign('interval', $preferences['graph_period']);
+$template->assign('autoRefresh', $autoRefresh);
+$template->assign('graphId', str_replace('-', '_', $preferences['service']));
+$template->assign('servicePreferences', $servicePreferences);
+
+$template->display('index.ihtml');
