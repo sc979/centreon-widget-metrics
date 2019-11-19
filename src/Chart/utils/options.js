@@ -1,3 +1,7 @@
+import en from 'apexcharts/dist/locales/en.json';
+import fr from 'apexcharts/dist/locales/fr.json';
+import es from 'apexcharts/dist/locales/es.json';
+import pt from 'apexcharts/dist/locales/pt-br.json';
 import { getMetricsUnitFormat, getMetricsLimits } from './metrics';
 
 export function extractYaxis(data) {
@@ -53,14 +57,18 @@ export function extractYaxis(data) {
   return yAxis;
 }
 
-export function extractOptions(data) {
+export function getLocale(locale = 'en') {
+  return locale;
+}
+
+export function getGeneralOptions() {
   const formattedOptions = {
     chart: {
       animations: {
         enabled: false,
       },
-      //locales: ['fr'],
-      defaultLocale: 'fr',
+      locales: [en, fr, es, pt],
+      events: {},
     },
     stroke: {
       width: 1,
@@ -80,10 +88,7 @@ export function extractOptions(data) {
         },
       },
     },
-    yaxis: extractYaxis(data),
   };
 
   return formattedOptions;
 }
-
-export default extractOptions;

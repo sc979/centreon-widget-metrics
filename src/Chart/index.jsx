@@ -1,36 +1,50 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import ApexChart from 'react-apexcharts';
-import extractOptions from './utils/options';
+import { getGeneralOptions, getLocale, extractYaxis } from './utils/options';
 import extractSeries from './utils/series';
 
 function Chart({ widgetId, preferences }) {
-  const [options, setOptions] = useState(null);
+  const options = getGeneralOptions();
+  const [yAxis, setYAxis] = useState(null);
   const [series, setSeries] = useState(null);
 
-  const { services, metrics, graph_period } = preferences;
-  const currentTimestamp = Math.floor(Date.now() / 1000);
+  const { title, services, metrics, graph_period: period } = preferences;
 
-  useEffect(() => {
+  const fetchMetricsData = (selectedServices, selectedMetrics, start, end) => {
     axios
       .get(
         `api/internal.php?object=centreon_metric&action=metricsData` +
-          `&services=${services.replace('-', '_')}&metrics=${metrics}` +
-          `&start=${currentTimestamp - graph_period}&end=${currentTimestamp}`,
+          `&services=${selectedServices.replace('-', '_')}` +
+          `&metrics=${selectedMetrics}` +
+          `&start=${start}` +
+          `&end=${end}`,
       )
       .then(({ data }) => {
-        console.log(data)
-        setOptions(extractOptions(data));
+        setYAxis(extractYaxis(data));
         setSeries(extractSeries(data));
       });
+  };
+
+  useEffect(() => {
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+    const start = currentTimestamp - period;
+    const end = currentTimestamp;
+    fetchMetricsData(services, metrics, start, end);
   }, []);
 
-  console.log(options)
-  console.log(series)
+  options.title = { text: title, align: 'center' };
+  options.chart.defaultLocale = getLocale();
+  options.yaxis = yAxis;
+  options.chart.events.beforeZoom = (chartContext, { xaxis }) => {
+    const start = Math.floor(xaxis.min / 1000);
+    const end = Math.floor(xaxis.max / 1000);
+    fetchMetricsData(services, metrics, start, end);
+  };
 
   return (
     <>
-      {options && series && (
+      {yAxis && series && (
         <ApexChart
           options={options}
           series={series}

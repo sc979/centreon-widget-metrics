@@ -11,9 +11,10 @@
     <url>./widgets/metrics/index.php</url>
     <autoRefresh>30</autoRefresh>
     <preferences>
+        <preference label="Title" name="title" defaultValue="" type="text"/>
         <preference label="Services" name="services" defaultValue="" type="serviceMulti" header="Resources"/>
         <preference label="Metrics" name="metrics" defaultValue="" type="metricMulti"/>
-        <preference label="Graph period" name="graph_period" type="list" header="Filter">
+        <preference label="Graph period" name="graph_period" defaultValue="86400" type="list" header="Filter">
             <option value="10800" label="Last 3 hours"/>
             <option value="21600" label="Last 6 hours"/>
             <option value="43200" label="Last 12 hours"/>
