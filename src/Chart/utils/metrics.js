@@ -3,7 +3,15 @@ export function getMaxAbsoluteValue(min, max) {
 }
 
 export function getUnitBase(unit) {
-  const base1024 = ['B'];
+  const base1024 = [
+    'B',
+    'bytes',
+    'bytespersecond',
+    'B/s',
+    'B/sec',
+    'o',
+    'octets',
+  ];
   if (base1024.includes(unit)) {
     return 1024;
   }
