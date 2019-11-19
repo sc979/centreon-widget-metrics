@@ -1,11 +1,16 @@
+import { getMetricsUnitFormat } from './metrics';
+
 export function extractYaxis(data) {
-  console.log(data);
   const units = {};
   data.metrics.forEach((metric) => {
     if (!Object.prototype.hasOwnProperty.call(units, metric.unit)) {
       units[metric.unit] = [];
     }
-    units[metric.unit].push(metric.metric);
+    units[metric.unit].push({
+      metric: metric.metric,
+      min: metric.min,
+      max: metric.max,
+    });
   });
 
   if (units.length > 2) {
@@ -16,27 +21,28 @@ export function extractYaxis(data) {
             return val.toFixed(2);
           },
         },
-        //title: { text: 'mon boule y' },
       },
     ];
   }
 
   const yAxis = [];
   Object.entries(units).forEach(([unit, metrics], unitIndex) => {
+    const unitFormat = getMetricsUnitFormat(unit, metrics);
+
     metrics.forEach((metric, metricIndex) => {
       yAxis.push({
         labels: {
           formatter: (val) => {
-            return val.toFixed(2) + unit;
+            return (val / unitFormat.divider).toFixed(2) + unitFormat.unit;
           },
         },
         show: metricIndex === 0,
         seriesName: unit,
         opposite: unitIndex !== 0,
+        title: metrics.length === 1 ? { text: metric.metric } : {},
       });
     });
   });
-  console.log(yAxis)
 
   return yAxis;
 }

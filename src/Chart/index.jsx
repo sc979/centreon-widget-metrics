@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import ApexChart from 'react-apexcharts';
 import extractOptions from './utils/options';
