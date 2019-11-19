@@ -8,18 +8,25 @@ function Chart({ widgetId, preferences }) {
   const [options, setOptions] = useState(null);
   const [series, setSeries] = useState(null);
 
+  const { services, metrics, graph_period } = preferences;
+  const currentTimestamp = Math.floor(Date.now() / 1000);
+
   useEffect(() => {
     axios
       .get(
-        `api/internal.php?object=centreon_metric&action=metricsData&services=11_50&metrics=11_48_3&start=1574078146&end=1574081746`,
+        `api/internal.php?object=centreon_metric&action=metricsData` +
+          `&services=${services.replace('-', '_')}&metrics=${metrics}` +
+          `&start=${currentTimestamp - graph_period}&end=${currentTimestamp}`,
       )
       .then(({ data }) => {
+        console.log(data)
         setOptions(extractOptions(data));
         setSeries(extractSeries(data));
       });
   }, []);
 
-  //console.log(series)
+  console.log(options)
+  console.log(series)
 
   return (
     <>

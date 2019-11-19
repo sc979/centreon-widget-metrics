@@ -1,8 +1,8 @@
-import { getMetricsUnitFormat } from './metrics';
+import { getMetricsUnitFormat, getMetricsLimits } from './metrics';
 
 export function extractYaxis(data) {
   const units = {};
-  data.metrics.forEach((metric) => {
+  data.metrics.forEach((metric, index) => {
     if (!Object.prototype.hasOwnProperty.call(units, metric.unit)) {
       units[metric.unit] = [];
     }
@@ -10,6 +10,7 @@ export function extractYaxis(data) {
       metric: metric.metric,
       min: metric.min,
       max: metric.max,
+      index,
     });
   });
 
@@ -28,19 +29,24 @@ export function extractYaxis(data) {
   const yAxis = [];
   Object.entries(units).forEach(([unit, metrics], unitIndex) => {
     const unitFormat = getMetricsUnitFormat(unit, metrics);
+    const limits = getMetricsLimits(metrics);
+    const seriesName = metrics[0].metric;
 
     metrics.forEach((metric, metricIndex) => {
-      yAxis.push({
+      yAxis[metric.index] = {
         labels: {
           formatter: (val) => {
             return (val / unitFormat.divider).toFixed(2) + unitFormat.unit;
           },
         },
+        showAlways: metricIndex === 0,
         show: metricIndex === 0,
-        seriesName: unit,
+        seriesName,
         opposite: unitIndex !== 0,
+        //min: limits.min,
+        //max: limits.max,
         title: metrics.length === 1 ? { text: metric.metric } : {},
-      });
+      };
     });
   });
 
@@ -53,6 +59,8 @@ export function extractOptions(data) {
       animations: {
         enabled: false,
       },
+      //locales: ['fr'],
+      defaultLocale: 'fr',
     },
     stroke: {
       width: 1,

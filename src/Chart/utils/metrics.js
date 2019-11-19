@@ -55,3 +55,43 @@ export function getMetricsUnitFormat(unit, metrics) {
 
   return metricUnitFormat;
 }
+
+function getMetricsMin(metrics) {
+  console.log(metrics)
+  let min = null;
+
+  for (const metric of metrics) {
+    if (isNaN(metric.min)) {
+      return null;
+    }
+
+    if (min === null || metric.min < min) {
+      min = metric.min;
+    }
+  }
+
+  return parseInt(min);
+}
+
+function getMetricsMax(metrics) {
+  let max = null;
+
+  for (const metric of metrics) {
+    if (isNaN(metric.max)) {
+      return null;
+    }
+
+    if (max === null || metric.max > max) {
+      max = metric.max;
+    }
+  }
+
+  return parseInt(max);
+}
+
+export function getMetricsLimits(metrics) {
+  return {
+    min: getMetricsMin(metrics),
+    max: getMetricsMax(metrics),
+  };
+}
