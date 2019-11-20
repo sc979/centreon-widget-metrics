@@ -31,5 +31,8 @@
             <option value="15552000" label="Last 6 months"/>
             <option value="31104000" label="Last year"/>
         </preference>
+        <preference label="Display status" name="display_status" defaultValue="0" type="boolean"/>
+        <preference label="Display acknowledgements" name="display_acknowledgements" defaultValue="1" type="boolean"/>
+        <preference label="Display downtimes" name="display_downtimes" defaultValue="1" type="boolean"/>
     </preferences>
 </configs>

@@ -6,13 +6,23 @@ import DowntimeIcon from '@material-ui/icons/Gavel';
 import { getGeneralOptions, getLocale, extractYaxis } from './utils/options';
 import extractSeries from './utils/series';
 
-function Chart({ widgetId, preferences, data, onPeriodChange }) {
-  const [options, setOptions] = useState(getGeneralOptions());
+function Chart({
+  widgetId,
+  preferences,
+  data,
+  onPeriodChange,
+  statusData,
+  displayAcknowledgements,
+  onDisplayAcknowledgements,
+  displayDowntimes,
+  onDisplayDowntimes,
+}) {
+  const options = getGeneralOptions();
   const [yAxis, setYAxis] = useState(null);
   const [series, setSeries] = useState(null);
-  const [displayAcknowledge, setDisplayAcknowledge] = useState(false);
-  const [displayDowntime, setDisplayDowntime] = useState(false);
-  const isInitialMount = useRef(true);
+  const [downtimes, setDowntimes] = useState([]);
+  const [acknowledgements, setAcknowledgements] = useState([]);
+  const [status, setStatus] = useState([]);
 
   const { title } = preferences;
 
@@ -45,15 +55,15 @@ function Chart({ widgetId, preferences, data, onPeriodChange }) {
       options.chart.toolbar.tools.customIcons.push({
         icon: renderToString(
           <AcknowledgeIcon
-            style={{ fontSize: 20 }}
-            color={displayAcknowledge ? 'primary' : 'disabled'}
+            fontSize="small"
+            style={{ color: displayAcknowledgements ? '#008FFB' : '#6E8192' }}
           />,
         ),
         index: 1,
         title: 'display acknowledgements',
         class: 'custom-icon',
-        click: (chart, options, e) => {
-          setDisplayAcknowledge(!displayAcknowledge);
+        click: () => {
+          onDisplayAcknowledgements(!displayAcknowledgements);
         },
       });
     }
@@ -62,108 +72,96 @@ function Chart({ widgetId, preferences, data, onPeriodChange }) {
       options.chart.toolbar.tools.customIcons.push({
         icon: renderToString(
           <DowntimeIcon
-            style={{ fontSize: 20 }}
-            color={displayDowntime ? 'primary' : 'disabled'}
+            fontSize="small"
+            style={{ color: displayDowntimes ? '#008FFB' : '#6E8192' }}
           />,
         ),
         index: 2,
         title: 'display downtimes',
         class: 'custom-icon',
-        click: (chart, options, e) => {
-          setDisplayDowntime(!displayDowntime);
+        click: () => {
+          onDisplayDowntimes(!displayDowntimes);
         },
       });
     }
   }
 
   useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-    } else if (displayAcknowledge) {
-      data.acknowledge.forEach((acknowledge, index) => {
-        setOptions({
-          ...options,
-          annotations: {
-            ...options.annotations,
-            xaxis: [
-              {
-                id: `acknowledge-${index}`,
-                type: 'acknowledge',
-                x: acknowledge.start * 1000,
-                strokeDashArray: 0,
-                borderColor: '#775DD0',
-                label: {
-                  borderColor: '#775DD0',
-                  style: {
-                    color: '#fff',
-                    background: '#775DD0',
-                  },
-                  text: 'acknowledge',
-                },
-              },
-            ],
+    if (displayAcknowledgements) {
+      setAcknowledgements(
+        data.acknowledge.map((acknowledge) => ({
+          x: acknowledge.start * 1000,
+          strokeDashArray: 0,
+          borderColor: '#91911f',
+          opacity: 0.5,
+          label: {
+            borderColor: '#91911f',
+            style: {
+              color: '#fff',
+              background: '#c0c01e',
+            },
+            text: 'acknowledge',
           },
-        });
-      });
+        })),
+      );
     } else {
-      setOptions({
-        ...options,
-        annotations: {
-          xaxis: options.annotations.xaxis.filter((annotation) => {
-            return annotation.type !== 'acknowledge';
-          }),
-        },
-      });
+      setAcknowledgements([]);
     }
-  }, [data.acknowledge, displayAcknowledge]);
+  }, [data.acknowledge, displayAcknowledgements]);
 
   useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-    } else if (displayDowntime) {
-      data.downtime.forEach((downtime, index) => {
-        setOptions({
-          ...options,
-          annotations: {
-            ...options.annotations,
-            xaxis: [
-              {
-                id: `downtime-${index}`,
-                type: 'downtime',
-                x: downtime.start * 1000,
-                x2: downtime.end * 1000,
-                strokeDashArray: 0,
-                borderColor: '#775DD0',
-                label: {
-                  borderColor: '#775DD0',
-                  style: {
-                    color: '#fff',
-                    background: '#775DD0',
-                  },
-                  text: 'downtime',
-                },
-              },
-            ],
+    if (displayDowntimes) {
+      setDowntimes(data.downtime.map((downtime, index) => {
+        return {
+          type: 'downtime',
+          x: downtime.start * 1000,
+          x2: downtime.end * 1000,
+          strokeDashArray: 0,
+          borderColor: '#775DD0',
+          opacity: 0.5,
+          label: {
+            borderColor: '#775DD0',
+            style: {
+              color: '#fff',
+              background: '#775DD0',
+            },
+            text: 'downtime',
           },
-        });
-      });
+        };
+      }));
     } else {
-      setOptions({
-        ...options,
-        annotations: {
-          xaxis: options.annotations.xaxis.filter((annotation) => {
-            return annotation.type !== 'downtime';
-          }),
-        },
-      });
+      setDowntimes([]);
     }
-  }, [data.downtime, displayDowntime]);
+  }, [data.downtime, displayDowntimes]);
+
+  useEffect(() => {
+    if (statusData !== null) {
+      setStatus(statusData.ok.map(({ start, end }, index) => {
+        return {
+          type: 'status',
+          x: start * 1000,
+          x2: end * 1000,
+          strokeDashArray: 0,
+          fillColor: 'green',
+          borderColor: 'none',
+          opacity: 0.1,
+          label: {
+            text: ' ',
+          },
+        };
+      }));
+    } else {
+     setStatus([]);
+    }
+  }, [statusData]);
 
   options.chart.events.beforeZoom = (chartContext, { xaxis }) => {
     const start = Math.floor(xaxis.min / 1000);
     const end = Math.floor(xaxis.max / 1000);
     onPeriodChange(start, end);
   };
+
+  options.annotations.xaxis = [...status, ...acknowledgements, ...downtimes];
 
   return (
     <>
@@ -172,7 +170,7 @@ function Chart({ widgetId, preferences, data, onPeriodChange }) {
           options={options}
           series={series}
           type="line"
-          height="300px"
+          height="260px"
         />
       )}
     </>
