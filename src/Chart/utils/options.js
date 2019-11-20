@@ -18,12 +18,15 @@ export function extractYaxis(data) {
     });
   });
 
-  if (units.length > 2) {
+  if (Object.keys(units).length > 2) {
     return [
       {
         labels: {
           formatter: (val) => {
-            return val.toFixed(2);
+            if (typeof val === 'number') {
+              return val.toFixed(2);
+            }
+            return null;
           },
         },
       },
@@ -40,7 +43,10 @@ export function extractYaxis(data) {
       yAxis[metric.index] = {
         labels: {
           formatter: (val) => {
-            return (val / unitFormat.divider).toFixed(2) + unitFormat.unit;
+            if (typeof val === 'number') {
+              return (val / unitFormat.divider).toFixed(2) + unitFormat.unit;
+            }
+            return null;
           },
         },
         showAlways: metricIndex === 0,
@@ -73,9 +79,6 @@ export function getGeneralOptions() {
     stroke: {
       width: 1,
     },
-    markers: {
-      size: 0,
-    },
     xaxis: {
       type: 'datetime',
       labels: {
@@ -86,6 +89,37 @@ export function getGeneralOptions() {
           day: 'dd MMM',
           hour: 'HH:mm',
         },
+      },
+    },
+    tooltip: {
+      enabled: true,
+      x: {
+        show: true,
+        //format: 'dd MM HH:mm',
+        formatter: (timestamp) => {
+          const DateToFormat = new Date(timestamp);
+          return `${DateToFormat.toLocaleDateString()} ${DateToFormat.toLocaleTimeString()}`;
+        },
+      },
+      onDatasetHover: {
+        highlightDataSeries: false,
+      },
+      /*
+      custom: ({ series, seriesIndex, dataPointIndex, w }) => {
+        return (
+          <div className="arrow_box">
+            test
+          </div>
+        );
+        return `<div class="arrow_box"><span>${series[seriesIndex][dataPointIndex]}</span></div>`;
+      },
+      */
+    },
+    markers: {
+      size: 0,
+      hover: {
+        size: 0,
+        sizeOffset: 0,
       },
     },
   };

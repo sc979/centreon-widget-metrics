@@ -57,7 +57,6 @@ export function getMetricsUnitFormat(unit, metrics) {
 }
 
 function getMetricsMin(metrics) {
-  console.log(metrics)
   let min = null;
 
   for (const metric of metrics) {
