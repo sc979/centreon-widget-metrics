@@ -1,3 +1,4 @@
+import { renderToString } from 'react-dom/server';
 import en from 'apexcharts/dist/locales/en.json';
 import fr from 'apexcharts/dist/locales/fr.json';
 import es from 'apexcharts/dist/locales/es.json';
@@ -70,6 +71,7 @@ export function getLocale(locale = 'en') {
 export function getGeneralOptions() {
   const formattedOptions = {
     chart: {
+      id: 'chart',
       animations: {
         enabled: false,
       },
@@ -106,12 +108,12 @@ export function getGeneralOptions() {
       },
       /*
       custom: ({ series, seriesIndex, dataPointIndex, w }) => {
-        return (
+        return renderToString(
           <div className="arrow_box">
             test
           </div>
         );
-        return `<div class="arrow_box"><span>${series[seriesIndex][dataPointIndex]}</span></div>`;
+        //return `<div class="arrow_box"><span>${series[seriesIndex][dataPointIndex]}</span></div>`;
       },
       */
     },
@@ -121,6 +123,9 @@ export function getGeneralOptions() {
         size: 0,
         sizeOffset: 0,
       },
+    },
+    annotations: {
+      xaxis: [],
     },
   };
 
