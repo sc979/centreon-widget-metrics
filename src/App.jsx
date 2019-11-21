@@ -6,11 +6,12 @@ function App({ widgetId }) {
   // run legacy method from centreon web to resize iframe's height
   window.parent.iResize(window.name, 300);
 
-  const [preferences, setPreferences] = useState(null);
+  const [title, setTitle] = useState(null);
   const [dataParams, setDataParams] = useState(null);
   const [displayStatus, setDisplayStatus] = useState(false);
   const [displayAcknowledgements, setDisplayAcknowledgements] = useState(false);
   const [displayDowntimes, setDisplayDowntimes] = useState(false);
+  const [displayStacked, setDisplayStacked] = useState(false);
   const [statusData, setStatusData] = useState(null);
   const [metricsData, setMetricsData] = useState(null);
 
@@ -21,22 +22,25 @@ function App({ widgetId }) {
       )
       .then(({ data }) => {
         const {
+          title: prefTitle,
           services,
           metrics,
           graph_period: period,
           display_status: status,
           display_acknowledgements: acknowledgements,
           display_downtimes: downtimes,
+          stacked,
         } = data;
         const currentTimestamp = Math.floor(Date.now() / 1000);
         const start = currentTimestamp - period;
         const end = currentTimestamp;
 
-        setPreferences(data);
+        setTitle(prefTitle);
         setDataParams({ services, metrics, start, end });
         setDisplayStatus(status === '1');
         setDisplayAcknowledgements(acknowledgements === '1');
         setDisplayDowntimes(downtimes === '1');
+        setDisplayStacked(stacked === '1');
       });
   }, [widgetId]);
 
@@ -107,12 +111,16 @@ function App({ widgetId }) {
     setDisplayDowntimes(value);
   };
 
+  const handleDisplayStacked = (value) => {
+    setDisplayStacked(value);
+  };
+
   return (
     <>
       {metricsData && (
         <Chart
           widgetId={widgetId}
-          preferences={preferences}
+          title={title}
           data={metricsData}
           onPeriodChange={handlePeriodChange}
           displayStatus={displayStatus}
@@ -122,6 +130,8 @@ function App({ widgetId }) {
           onDisplayAcknowledgements={handleDisplayAcknowledgements}
           displayDowntimes={displayDowntimes}
           onDisplayDowntimes={handleDisplayDowntimes}
+          displayStacked={displayStacked}
+          onDisplayStacked={handleDisplayStacked}
         />
       )}
     </>

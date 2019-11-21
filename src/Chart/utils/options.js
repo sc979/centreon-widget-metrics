@@ -5,7 +5,7 @@ import es from 'apexcharts/dist/locales/es.json';
 import pt from 'apexcharts/dist/locales/pt-br.json';
 import { getMetricsUnitFormat, getMetricsLimits } from './metrics';
 
-export function extractYaxis(data) {
+export function groupByUnit(data) {
   const units = {};
   data.metrics.forEach((metric, index) => {
     if (!Object.prototype.hasOwnProperty.call(units, metric.unit)) {
@@ -18,6 +18,12 @@ export function extractYaxis(data) {
       index,
     });
   });
+
+  return units;
+}
+
+export function extractYaxis(data) {
+  const units = groupByUnit(data);
 
   if (Object.keys(units).length > 2) {
     return [
@@ -40,25 +46,27 @@ export function extractYaxis(data) {
     const limits = getMetricsLimits(metrics);
     const seriesName = metrics[0].metric;
 
-    metrics.forEach((metric, metricIndex) => {
-      yAxis[metric.index] = {
-        labels: {
-          formatter: (val) => {
-            if (typeof val === 'number') {
-              return (val / unitFormat.divider).toFixed(2) + unitFormat.unit;
-            }
-            return null;
+    metrics
+      .sort((a, b) => (a.ds_order > b.ds_order ? 1 : -1))
+      .forEach((metric, metricIndex) => {
+        yAxis[metric.index] = {
+          labels: {
+            formatter: (val) => {
+              if (typeof val === 'number') {
+                return (val / unitFormat.divider).toFixed(2) + unitFormat.unit;
+              }
+              return null;
+            },
           },
-        },
-        showAlways: metricIndex === 0,
-        show: metricIndex === 0,
-        seriesName,
-        opposite: unitIndex !== 0,
-        //min: limits.min,
-        //max: limits.max,
-        title: metrics.length === 1 ? { text: metric.metric } : {},
-      };
-    });
+          showAlways: metricIndex === 0,
+          show: metricIndex === 0,
+          seriesName,
+          opposite: unitIndex !== 0,
+          //min: limits.min,
+          //max: limits.max,
+          title: metrics.length === 1 ? { text: metric.metric } : {},
+        };
+      });
   });
 
   return yAxis;
@@ -78,6 +86,9 @@ export function getGeneralOptions() {
       locales: [en, fr, es, pt],
       events: {},
     },
+    dataLabels: {
+      enabled: false,
+    },
     stroke: {
       width: 1,
     },
@@ -92,12 +103,14 @@ export function getGeneralOptions() {
           hour: 'HH:mm',
         },
       },
+      tooltip: {
+        enabled: false,
+      },
     },
     tooltip: {
       enabled: true,
       x: {
         show: true,
-        //format: 'dd MM HH:mm',
         formatter: (timestamp) => {
           const DateToFormat = new Date(timestamp);
           return `${DateToFormat.toLocaleDateString()} ${DateToFormat.toLocaleTimeString()}`;

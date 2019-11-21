@@ -4,12 +4,18 @@ import ApexChart from 'react-apexcharts';
 import StatusIcon from '@material-ui/icons/ViewArray';
 import AcknowledgeIcon from '@material-ui/icons/EmojiPeople';
 import DowntimeIcon from '@material-ui/icons/Gavel';
-import { getGeneralOptions, getLocale, extractYaxis } from './utils/options';
+import StackedIcon from '@material-ui/icons/HorizontalSplit';
+import {
+  getGeneralOptions,
+  getLocale,
+  extractYaxis,
+  groupByUnit,
+} from './utils/options';
 import extractSeries from './utils/series';
 
 function Chart({
   widgetId,
-  preferences,
+  title,
   data,
   onPeriodChange,
   displayStatus,
@@ -19,15 +25,18 @@ function Chart({
   onDisplayAcknowledgements,
   displayDowntimes,
   onDisplayDowntimes,
+  displayStacked,
+  onDisplayStacked,
 }) {
   const options = getGeneralOptions();
+  const [type, setType] = useState('line');
   const [yAxis, setYAxis] = useState(null);
   const [series, setSeries] = useState(null);
   const [downtimes, setDowntimes] = useState([]);
   const [acknowledgements, setAcknowledgements] = useState([]);
   const [status, setStatus] = useState([]);
+  const [stacked, setStacked] = useState(false);
 
-  const { title } = preferences;
 
   useEffect(() => {
     setYAxis(extractYaxis(data));
@@ -37,6 +46,8 @@ function Chart({
   options.title = { text: title, align: 'center' };
   options.chart.defaultLocale = getLocale();
   options.yaxis = yAxis;
+
+  options.chart.stacked = stacked;
 
   options.chart.toolbar = {
     show: true,
@@ -101,6 +112,23 @@ function Chart({
         class: 'custom-icon',
         click: () => {
           onDisplayDowntimes(!displayDowntimes);
+        },
+      });
+    }
+
+    if (Object.keys(groupByUnit(data)).length === 1) {
+      options.chart.toolbar.tools.customIcons.push({
+        icon: renderToString(
+          <StackedIcon
+            fontSize="small"
+            style={{ color: displayStacked ? '#008FFB' : '#6E8192' }}
+          />,
+        ),
+        index: 2,
+        title: 'stacked',
+        class: 'custom-icon',
+        click: () => {
+          onDisplayStacked(!displayStacked);
         },
       });
     }
@@ -185,6 +213,20 @@ function Chart({
     }
   }, [data.downtime, displayDowntimes]);
 
+  useEffect(() => {
+    if (
+      displayStacked &&
+      data.global.multiple_services === 0 &&
+      Object.keys(groupByUnit(data)).length === 1
+    ) {
+      setStacked(true);
+      setType('area');
+    } else {
+      setStacked(false);
+      setType('line');
+    }
+  }, [data, displayStacked]);
+
   options.chart.events.beforeZoom = (chartContext, { xaxis }) => {
     const start = Math.floor(xaxis.min / 1000);
     const end = Math.floor(xaxis.max / 1000);
@@ -199,7 +241,7 @@ function Chart({
         <ApexChart
           options={options}
           series={series}
-          type="line"
+          type={type}
           height="260px"
         />
       )}
