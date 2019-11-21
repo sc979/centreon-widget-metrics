@@ -62,12 +62,16 @@ function App({ widgetId }) {
   }, [dataParams]);
 
   useEffect(() => {
-    if (dataParams === null || displayStatus === false) {
+    if (dataParams === null || metricsData === null) {
       return;
     }
 
     const { services, metrics, start, end } = dataParams;
-    if (services.split(',').length === 1 && metrics.split(',').length > 0) {
+    if (
+      metricsData.global.multiple_services === 0 &&
+      services.split(',').length === 1 &&
+      metrics.length === 0
+    ) {
       axios
         .get(
           `api/internal.php?object=centreon_metric&action=statusByService` +
@@ -81,7 +85,7 @@ function App({ widgetId }) {
           }
         });
     }
-  }, [dataParams, displayStatus]);
+  }, [dataParams, metricsData]);
 
   const handlePeriodChange = (start, end) => {
     setDataParams({
@@ -89,6 +93,10 @@ function App({ widgetId }) {
       start,
       end,
     });
+  };
+
+  const handleDisplayStatus = (value) => {
+    setDisplayStatus(value);
   };
 
   const handleDisplayAcknowledgements = (value) => {
@@ -107,7 +115,9 @@ function App({ widgetId }) {
           preferences={preferences}
           data={metricsData}
           onPeriodChange={handlePeriodChange}
+          displayStatus={displayStatus}
           statusData={statusData}
+          onDisplayStatus={handleDisplayStatus}
           displayAcknowledgements={displayAcknowledgements}
           onDisplayAcknowledgements={handleDisplayAcknowledgements}
           displayDowntimes={displayDowntimes}

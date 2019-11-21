@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { renderToString } from 'react-dom/server';
 import ApexChart from 'react-apexcharts';
+import StatusIcon from '@material-ui/icons/ViewArray';
 import AcknowledgeIcon from '@material-ui/icons/EmojiPeople';
 import DowntimeIcon from '@material-ui/icons/Gavel';
 import { getGeneralOptions, getLocale, extractYaxis } from './utils/options';
@@ -11,7 +12,9 @@ function Chart({
   preferences,
   data,
   onPeriodChange,
+  displayStatus,
   statusData,
+  onDisplayStatus,
   displayAcknowledgements,
   onDisplayAcknowledgements,
   displayDowntimes,
@@ -51,6 +54,23 @@ function Chart({
 
   options.chart.toolbar.tools.customIcons = [];
   if (data.global.multiple_services === 0) {
+    if (statusData !== null) {
+      options.chart.toolbar.tools.customIcons.push({
+        icon: renderToString(
+          <StatusIcon
+            fontSize="small"
+            style={{ color: displayStatus ? '#008FFB' : '#6E8192' }}
+          />,
+        ),
+        index: 1,
+        title: 'display status',
+        class: 'custom-icon',
+        click: () => {
+          onDisplayStatus(!displayStatus);
+        },
+      });
+    }
+
     if (data.acknowledge.length > 0) {
       options.chart.toolbar.tools.customIcons.push({
         icon: renderToString(
@@ -87,11 +107,43 @@ function Chart({
   }
 
   useEffect(() => {
+    if (displayStatus && statusData !== null) {
+      const statusParams = {
+        ok: 'green',
+        warning: 'yellow',
+        critical: 'red',
+        unknown: 'grey',
+      };
+      setStatus(
+        Object.entries(statusData).reduce((acc, [statusLabel, values]) => {
+          if (statusParams[statusLabel]) {
+            values.forEach((value) => {
+              acc.push({
+                x: value.start * 1000,
+                x2: value.end * 1000,
+                fillColor: statusParams[statusLabel],
+                borderColor: 'none',
+                opacity: 0.1,
+                label: {
+                  text: ' ',
+                },
+              });
+            });
+          }
+          return acc;
+        }, []),
+      );
+    } else {
+      setStatus([]);
+    }
+  }, [statusData, displayStatus]);
+
+  useEffect(() => {
     if (displayAcknowledgements) {
       setAcknowledgements(
         data.acknowledge.map((acknowledge) => ({
           x: acknowledge.start * 1000,
-          strokeDashArray: 0,
+          strokeDashArray: 5,
           borderColor: '#91911f',
           opacity: 0.5,
           label: {
@@ -100,7 +152,7 @@ function Chart({
               color: '#fff',
               background: '#c0c01e',
             },
-            text: 'acknowledge',
+            text: 'ack',
           },
         })),
       );
@@ -111,12 +163,11 @@ function Chart({
 
   useEffect(() => {
     if (displayDowntimes) {
-      setDowntimes(data.downtime.map((downtime, index) => {
-        return {
-          type: 'downtime',
+      setDowntimes(
+        data.downtime.map((downtime, index) => ({
           x: downtime.start * 1000,
           x2: downtime.end * 1000,
-          strokeDashArray: 0,
+          strokeDashArray: 5,
           borderColor: '#775DD0',
           opacity: 0.5,
           label: {
@@ -125,35 +176,14 @@ function Chart({
               color: '#fff',
               background: '#775DD0',
             },
-            text: 'downtime',
+            text: 'dwt',
           },
-        };
-      }));
+        })),
+      );
     } else {
       setDowntimes([]);
     }
   }, [data.downtime, displayDowntimes]);
-
-  useEffect(() => {
-    if (statusData !== null) {
-      setStatus(statusData.ok.map(({ start, end }, index) => {
-        return {
-          type: 'status',
-          x: start * 1000,
-          x2: end * 1000,
-          strokeDashArray: 0,
-          fillColor: 'green',
-          borderColor: 'none',
-          opacity: 0.1,
-          label: {
-            text: ' ',
-          },
-        };
-      }));
-    } else {
-     setStatus([]);
-    }
-  }, [statusData]);
 
   options.chart.events.beforeZoom = (chartContext, { xaxis }) => {
     const start = Math.floor(xaxis.min / 1000);
