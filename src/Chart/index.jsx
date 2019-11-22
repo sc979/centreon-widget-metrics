@@ -38,15 +38,22 @@ function Chart({
   const [status, setStatus] = useState([]);
   const [stacked, setStacked] = useState(false);
 
-
   useEffect(() => {
+    console.log('set y axis')
     setYAxis(extractYaxis(data));
+    console.log('set colors')
     setColors(extractColors(data));
   }, [data]);
 
   useEffect(() => {
-    setSeries(extractSeries(data, stacked));
-  }, [data, stacked]);
+    console.log('set series')
+    const isStacked =
+      displayStacked &&
+      data.global.multiple_services === 0 &&
+      Object.keys(groupByUnit(data)).length === 1;
+    setStacked(isStacked);
+    setSeries(extractSeries(data, isStacked));
+  }, [data, displayStacked]);
 
   options.title = { text: title, align: 'center' };
   options.chart.defaultLocale = getLocale();
@@ -141,6 +148,7 @@ function Chart({
   }
 
   useEffect(() => {
+    let calculatedStatus = [];
     if (displayStatus && statusData !== null) {
       const statusParams = {
         ok: 'green',
@@ -148,8 +156,8 @@ function Chart({
         critical: 'red',
         unknown: 'grey',
       };
-      setStatus(
-        Object.entries(statusData).reduce((acc, [statusLabel, values]) => {
+      calculatedStatus = Object.entries(statusData).reduce(
+        (acc, [statusLabel, values]) => {
           if (statusParams[statusLabel]) {
             values.forEach((value) => {
               acc.push({
@@ -165,67 +173,58 @@ function Chart({
             });
           }
           return acc;
-        }, []),
+        },
+        [],
       );
-    } else {
-      setStatus([]);
     }
+    console.log('set status')
+    setStatus(calculatedStatus);
   }, [statusData, displayStatus]);
 
   useEffect(() => {
+    let calculatedAknowledgement = [];
     if (displayAcknowledgements && data.global.multiple_services === 0) {
-      setAcknowledgements(
-        data.acknowledge.map((acknowledge) => ({
-          x: acknowledge.start * 1000,
-          strokeDashArray: 5,
+      calculatedAknowledgement = data.acknowledge.map((acknowledge) => ({
+        x: acknowledge.start * 1000,
+        strokeDashArray: 5,
+        borderColor: '#91911f',
+        opacity: 0.5,
+        label: {
           borderColor: '#91911f',
-          opacity: 0.5,
-          label: {
-            borderColor: '#91911f',
-            style: {
-              color: '#fff',
-              background: '#c0c01e',
-            },
-            text: 'ack',
+          style: {
+            color: '#fff',
+            background: '#c0c01e',
           },
-        })),
-      );
-    } else {
-      setAcknowledgements([]);
+          text: 'ack',
+        },
+      }));
     }
+    console.log('set ack')
+    setAcknowledgements(calculatedAknowledgement);
   }, [data.acknowledge, displayAcknowledgements]);
 
   useEffect(() => {
+    let calculatedDowntimes = [];
     if (displayDowntimes && data.global.multiple_services === 0) {
-      setDowntimes(
-        data.downtime.map((downtime, index) => ({
-          x: downtime.start * 1000,
-          x2: downtime.end * 1000,
-          strokeDashArray: 5,
+      calculatedDowntimes = data.downtime.map((downtime, index) => ({
+        x: downtime.start * 1000,
+        x2: downtime.end * 1000,
+        strokeDashArray: 5,
+        borderColor: '#775DD0',
+        opacity: 0.5,
+        label: {
           borderColor: '#775DD0',
-          opacity: 0.5,
-          label: {
-            borderColor: '#775DD0',
-            style: {
-              color: '#fff',
-              background: '#775DD0',
-            },
-            text: 'dwt',
+          style: {
+            color: '#fff',
+            background: '#775DD0',
           },
-        })),
-      );
-    } else {
-      setDowntimes([]);
+          text: 'dwt',
+        },
+      }));
     }
+    console.log('set downtimes')
+    setDowntimes(calculatedDowntimes);
   }, [data.downtime, displayDowntimes]);
-
-  useEffect(() => {
-    const isStacked =
-      displayStacked &&
-      data.global.multiple_services === 0 &&
-      Object.keys(groupByUnit(data)).length === 1;
-    setStacked(isStacked);
-  }, [data, displayStacked]);
 
   options.chart.events.beforeZoom = (chartContext, { xaxis }) => {
     const start = Math.floor(xaxis.min / 1000);
@@ -240,7 +239,7 @@ function Chart({
 
   options.annotations.xaxis = [...status, ...acknowledgements, ...downtimes];
 
-  console.log('render')
+  console.log(options)
 
   return (
     <>

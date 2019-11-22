@@ -1,7 +1,9 @@
+import { orderMetrics } from './metrics';
+
 function extractSeries(data, stacked) {
   const formattedSeries = [];
 
-  data.metrics.forEach((metric) => {
+  orderMetrics(data.metrics).forEach((metric) => {
     formattedSeries.push({
       name: metric.metric,
       type: stacked ? 'area' : 'line',
