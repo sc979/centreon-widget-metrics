@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { renderToString } from 'react-dom/server';
+import Apex from 'apexcharts';
 import ApexChart from 'react-apexcharts';
 import StatusIcon from '@material-ui/icons/ViewArray';
 import AcknowledgeIcon from '@material-ui/icons/EmojiPeople';
 import DowntimeIcon from '@material-ui/icons/Gavel';
 import StackedIcon from '@material-ui/icons/HorizontalSplit';
+import DownloadSvgIcon from '@material-ui/icons/PhotoOutlined';
 import {
   getGeneralOptions,
   getLocale,
   extractYaxis,
   extractColors,
-  groupByUnit,
 } from './utils/options';
+import { groupByUnit } from './utils/metrics';
 import extractSeries from './utils/series';
 
 function Chart({
@@ -39,14 +41,11 @@ function Chart({
   const [stacked, setStacked] = useState(false);
 
   useEffect(() => {
-    console.log('set y axis')
     setYAxis(extractYaxis(data));
-    console.log('set colors')
     setColors(extractColors(data));
   }, [data]);
 
   useEffect(() => {
-    console.log('set series')
     const isStacked =
       displayStacked &&
       data.global.multiple_services === 0 &&
@@ -67,9 +66,9 @@ function Chart({
     tools: {
       download: false,
       selection: true,
-      zoom: true,
+      zoom: ' ',
       zoomin: false,
-      zoomout: true,
+      zoomout: false,
       pan: false,
       reset: false,
     },
@@ -147,6 +146,24 @@ function Chart({
     }
   }
 
+  options.chart.toolbar.tools.customIcons.push({
+    icon: renderToString(
+      <DownloadSvgIcon fontSize="small" style={{ color: '#6E8192' }} />,
+    ),
+    index: 1,
+    title: 'export to png',
+    class: 'custom-icon',
+    click: async (chartContext) => {
+      const base64 = await chartContext.dataURI();
+      const downloadLink = document.createElement('a');
+      downloadLink.href = base64;
+      downloadLink.download = 'chart.png';
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink)
+    },
+  });
+
   useEffect(() => {
     let calculatedStatus = [];
     if (displayStatus && statusData !== null) {
@@ -177,7 +194,6 @@ function Chart({
         [],
       );
     }
-    console.log('set status')
     setStatus(calculatedStatus);
   }, [statusData, displayStatus]);
 
@@ -199,7 +215,6 @@ function Chart({
         },
       }));
     }
-    console.log('set ack')
     setAcknowledgements(calculatedAknowledgement);
   }, [data.acknowledge, displayAcknowledgements]);
 
@@ -222,11 +237,11 @@ function Chart({
         },
       }));
     }
-    console.log('set downtimes')
     setDowntimes(calculatedDowntimes);
   }, [data.downtime, displayDowntimes]);
 
   options.chart.events.beforeZoom = (chartContext, { xaxis }) => {
+    setSeries([]);
     const start = Math.floor(xaxis.min / 1000);
     const end = Math.floor(xaxis.max / 1000);
     onPeriodChange(start, end);
@@ -238,8 +253,6 @@ function Chart({
   };
 
   options.annotations.xaxis = [...status, ...acknowledgements, ...downtimes];
-
-  console.log(options)
 
   return (
     <>

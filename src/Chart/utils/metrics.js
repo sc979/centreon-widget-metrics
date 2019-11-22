@@ -1,5 +1,24 @@
 export function orderMetrics(metrics) {
-  return metrics.sort((a, b) => (a.ds_order > b.ds_order ? 1 : -1));
+  return metrics
+    .sort((a, b) => (a.ds_order < b.ds_order ? 1 : -1))
+    .sort((a, b) => (a.unit > b.unit ? 1 : -1));
+}
+
+export function groupByUnit(data) {
+  const units = {};
+  orderMetrics(data.metrics).forEach((metric, index) => {
+    if (!Object.prototype.hasOwnProperty.call(units, metric.unit)) {
+      units[metric.unit] = [];
+    }
+    units[metric.unit].push({
+      metric: metric.metric,
+      min: metric.min,
+      max: metric.max,
+      index,
+    });
+  });
+
+  return units;
 }
 
 export function getMaxAbsoluteValue(min, max) {

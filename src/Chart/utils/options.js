@@ -6,24 +6,8 @@ import {
   getMetricsUnitFormat,
   getMetricsLimits,
   orderMetrics,
+  groupByUnit,
 } from './metrics';
-
-export function groupByUnit(data) {
-  const units = {};
-  orderMetrics(data.metrics).forEach((metric, index) => {
-    if (!Object.prototype.hasOwnProperty.call(units, metric.unit)) {
-      units[metric.unit] = [];
-    }
-    units[metric.unit].push({
-      metric: metric.metric,
-      min: metric.min,
-      max: metric.max,
-      index,
-    });
-  });
-
-  return units;
-}
 
 export function extractColors(data) {
   return orderMetrics(data.metrics).map((metric) => {
