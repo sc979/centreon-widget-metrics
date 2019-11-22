@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { renderToString } from 'react-dom/server';
 import ApexChart from 'react-apexcharts';
 import StatusIcon from '@material-ui/icons/ViewArray';
@@ -9,6 +9,7 @@ import {
   getGeneralOptions,
   getLocale,
   extractYaxis,
+  extractColors,
   groupByUnit,
 } from './utils/options';
 import extractSeries from './utils/series';
@@ -29,9 +30,9 @@ function Chart({
   onDisplayStacked,
 }) {
   const options = getGeneralOptions();
-  const [type, setType] = useState('line');
   const [yAxis, setYAxis] = useState(null);
   const [series, setSeries] = useState(null);
+  const [colors, setColors] = useState(null);
   const [downtimes, setDowntimes] = useState([]);
   const [acknowledgements, setAcknowledgements] = useState([]);
   const [status, setStatus] = useState([]);
@@ -40,12 +41,17 @@ function Chart({
 
   useEffect(() => {
     setYAxis(extractYaxis(data));
-    setSeries(extractSeries(data));
+    setColors(extractColors(data));
   }, [data]);
+
+  useEffect(() => {
+    setSeries(extractSeries(data, stacked));
+  }, [data, stacked]);
 
   options.title = { text: title, align: 'center' };
   options.chart.defaultLocale = getLocale();
   options.yaxis = yAxis;
+  options.colors = colors;
 
   options.chart.stacked = stacked;
 
@@ -167,7 +173,7 @@ function Chart({
   }, [statusData, displayStatus]);
 
   useEffect(() => {
-    if (displayAcknowledgements) {
+    if (displayAcknowledgements && data.global.multiple_services === 0) {
       setAcknowledgements(
         data.acknowledge.map((acknowledge) => ({
           x: acknowledge.start * 1000,
@@ -190,7 +196,7 @@ function Chart({
   }, [data.acknowledge, displayAcknowledgements]);
 
   useEffect(() => {
-    if (displayDowntimes) {
+    if (displayDowntimes && data.global.multiple_services === 0) {
       setDowntimes(
         data.downtime.map((downtime, index) => ({
           x: downtime.start * 1000,
@@ -214,17 +220,11 @@ function Chart({
   }, [data.downtime, displayDowntimes]);
 
   useEffect(() => {
-    if (
+    const isStacked =
       displayStacked &&
       data.global.multiple_services === 0 &&
-      Object.keys(groupByUnit(data)).length === 1
-    ) {
-      setStacked(true);
-      setType('area');
-    } else {
-      setStacked(false);
-      setType('line');
-    }
+      Object.keys(groupByUnit(data)).length === 1;
+    setStacked(isStacked);
   }, [data, displayStacked]);
 
   options.chart.events.beforeZoom = (chartContext, { xaxis }) => {
@@ -233,7 +233,14 @@ function Chart({
     onPeriodChange(start, end);
   };
 
+  options.fill = {
+    type: 'solid',
+    opacity: 0.5,
+  };
+
   options.annotations.xaxis = [...status, ...acknowledgements, ...downtimes];
+
+  console.log('render')
 
   return (
     <>
@@ -241,7 +248,7 @@ function Chart({
         <ApexChart
           options={options}
           series={series}
-          type={type}
+          type="line"
           height="260px"
         />
       )}

@@ -1,3 +1,7 @@
+export function orderMetrics(metrics) {
+  return metrics.sort((a, b) => (a.ds_order > b.ds_order ? 1 : -1));
+}
+
 export function getMaxAbsoluteValue(min, max) {
   return Math.max(Math.abs(min), Math.abs(max));
 }
