@@ -7,6 +7,7 @@ function extractSeries(data, stacked) {
     formattedSeries.push({
       name: metric.metric,
       type: stacked ? 'area' : 'line',
+      unit: metric.unit,
       data: metric.data.map((item, index) => {
         return [data.times[index] * 1000, item];
       }),

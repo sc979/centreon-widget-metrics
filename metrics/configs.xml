@@ -9,7 +9,7 @@
     <screenshot></screenshot>
     <thumbnail></thumbnail>
     <url>./widgets/metrics/index.php</url>
-    <autoRefresh>30</autoRefresh>
+    <autoRefresh>99999999999999</autoRefresh>
     <preferences>
         <preference label="Title" name="title" defaultValue="" type="text"/>
         <preference label="Services" name="services" defaultValue="" type="serviceMulti" header="Resources"/>
@@ -34,5 +34,7 @@
         <preference label="Display status" name="display_status" defaultValue="0" type="boolean"/>
         <preference label="Display acknowledgements" name="display_acknowledgements" defaultValue="1" type="boolean"/>
         <preference label="Display downtimes" name="display_downtimes" defaultValue="1" type="boolean"/>
+        <preference label="Stacked" name="stacked" defaultValue="0" type="boolean"/>
+        <preference label="Size to max" name="size_to_max" defaultValue="0" type="boolean"/>
     </preferences>
 </configs>

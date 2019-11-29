@@ -13,7 +13,7 @@ import {
   extractYaxis,
   extractColors,
 } from './utils/options';
-import { groupByUnit } from './utils/metrics';
+import { groupByUnit, getUnitFormat } from './utils/metrics';
 import extractSeries from './utils/series';
 
 function Chart({
@@ -30,6 +30,7 @@ function Chart({
   onDisplayDowntimes,
   displayStacked,
   onDisplayStacked,
+  sizeToMax,
 }) {
   const options = getGeneralOptions();
   const [yAxis, setYAxis] = useState(null);
@@ -41,9 +42,9 @@ function Chart({
   const [stacked, setStacked] = useState(false);
 
   useEffect(() => {
-    setYAxis(extractYaxis(data));
+    setYAxis(extractYaxis(data, stacked, sizeToMax));
     setColors(extractColors(data));
-  }, [data]);
+  }, [data, stacked, sizeToMax]);
 
   useEffect(() => {
     const isStacked =
@@ -77,56 +78,20 @@ function Chart({
 
   options.chart.toolbar.tools.customIcons = [];
   if (data.global.multiple_services === 0) {
-    if (statusData !== null) {
-      options.chart.toolbar.tools.customIcons.push({
-        icon: renderToString(
-          <StatusIcon
-            fontSize="small"
-            style={{ color: displayStatus ? '#008FFB' : '#6E8192' }}
-          />,
-        ),
-        index: 1,
-        title: 'display status',
-        class: 'custom-icon',
-        click: () => {
-          onDisplayStatus(!displayStatus);
-        },
-      });
-    }
-
-    if (data.acknowledge.length > 0) {
-      options.chart.toolbar.tools.customIcons.push({
-        icon: renderToString(
-          <AcknowledgeIcon
-            fontSize="small"
-            style={{ color: displayAcknowledgements ? '#008FFB' : '#6E8192' }}
-          />,
-        ),
-        index: 1,
-        title: 'display acknowledgements',
-        class: 'custom-icon',
-        click: () => {
-          onDisplayAcknowledgements(!displayAcknowledgements);
-        },
-      });
-    }
-
-    if (data.downtime.length > 0) {
-      options.chart.toolbar.tools.customIcons.push({
-        icon: renderToString(
-          <DowntimeIcon
-            fontSize="small"
-            style={{ color: displayDowntimes ? '#008FFB' : '#6E8192' }}
-          />,
-        ),
-        index: 2,
-        title: 'display downtimes',
-        class: 'custom-icon',
-        click: () => {
-          onDisplayDowntimes(!displayDowntimes);
-        },
-      });
-    }
+    options.chart.toolbar.tools.customIcons.push({
+      icon: renderToString(
+        <StatusIcon
+          fontSize="small"
+          style={{ color: displayStatus ? '#008FFB' : '#6E8192' }}
+        />,
+      ),
+      index: 1,
+      title: 'display status',
+      class: 'custom-icon',
+      click: () => {
+        onDisplayStatus(!displayStatus);
+      },
+    });
 
     if (Object.keys(groupByUnit(data)).length === 1) {
       options.chart.toolbar.tools.customIcons.push({
@@ -144,13 +109,43 @@ function Chart({
         },
       });
     }
+
+    options.chart.toolbar.tools.customIcons.push({
+      icon: renderToString(
+        <AcknowledgeIcon
+          fontSize="small"
+          style={{ color: displayAcknowledgements ? '#008FFB' : '#6E8192' }}
+        />,
+      ),
+      index: 3,
+      title: 'display acknowledgements',
+      class: 'custom-icon',
+      click: () => {
+        onDisplayAcknowledgements(!displayAcknowledgements);
+      },
+    });
+
+    options.chart.toolbar.tools.customIcons.push({
+      icon: renderToString(
+        <DowntimeIcon
+          fontSize="small"
+          style={{ color: displayDowntimes ? '#008FFB' : '#6E8192' }}
+        />,
+      ),
+      index: 4,
+      title: 'display downtimes',
+      class: 'custom-icon',
+      click: () => {
+        onDisplayDowntimes(!displayDowntimes);
+      },
+    });
   }
 
   options.chart.toolbar.tools.customIcons.push({
     icon: renderToString(
       <DownloadSvgIcon fontSize="small" style={{ color: '#6E8192' }} />,
     ),
-    index: 1,
+    index: 5,
     title: 'export to png',
     class: 'custom-icon',
     click: async (chartContext) => {
@@ -247,6 +242,13 @@ function Chart({
     onPeriodChange(start, end);
   };
 
+  options.tooltip.y = {
+    formatter: (value, { seriesIndex }) => {
+      const unitFormat = getUnitFormat(series[seriesIndex].unit, value, value);
+      return `${(value / unitFormat.divider).toFixed(2)} ${unitFormat.unit}`;
+    },
+  };
+
   options.fill = {
     type: 'solid',
     opacity: 0.5,
@@ -262,6 +264,7 @@ function Chart({
           series={series}
           type="line"
           height="260px"
+          width="100%"
         />
       )}
     </>

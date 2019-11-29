@@ -4,7 +4,7 @@ import Chart from './Chart';
 
 function App({ widgetId }) {
   // run legacy method from centreon web to resize iframe's height
-  window.parent.iResize(window.name, 300);
+  window.parent.iResize(window.name, 280);
 
   const [title, setTitle] = useState(null);
   const [dataParams, setDataParams] = useState(null);
@@ -12,6 +12,7 @@ function App({ widgetId }) {
   const [displayAcknowledgements, setDisplayAcknowledgements] = useState(false);
   const [displayDowntimes, setDisplayDowntimes] = useState(false);
   const [displayStacked, setDisplayStacked] = useState(false);
+  const [sizeToMax, setSizeToMax] = useState(false);
   const [statusData, setStatusData] = useState(null);
   const [metricsData, setMetricsData] = useState(null);
 
@@ -30,6 +31,7 @@ function App({ widgetId }) {
           display_acknowledgements: acknowledgements,
           display_downtimes: downtimes,
           stacked,
+          size_to_max: prefSizeToMax,
         } = data;
         const currentTimestamp = Math.floor(Date.now() / 1000);
         const start = currentTimestamp - period;
@@ -41,6 +43,7 @@ function App({ widgetId }) {
         setDisplayAcknowledgements(acknowledgements === '1');
         setDisplayDowntimes(downtimes === '1');
         setDisplayStacked(stacked === '1');
+        setSizeToMax(prefSizeToMax === '1');
       });
   }, [widgetId]);
 
@@ -132,6 +135,7 @@ function App({ widgetId }) {
           onDisplayDowntimes={handleDisplayDowntimes}
           displayStacked={displayStacked}
           onDisplayStacked={handleDisplayStacked}
+          sizeToMax={sizeToMax}
         />
       )}
     </>

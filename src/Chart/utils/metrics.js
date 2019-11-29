@@ -14,6 +14,8 @@ export function groupByUnit(data) {
       metric: metric.metric,
       min: metric.min,
       max: metric.max,
+      minimum_value: metric.minimum_value,
+      maximum_value: metric.maximum_value,
       index,
     });
   });
@@ -50,7 +52,7 @@ export function getUnitFormat(unit, min, max) {
     divider: 1,
     unit,
   };
-  ['M', 'G', 'T'].forEach((scale) => {
+  ['K', 'M', 'G', 'T'].forEach((scale) => {
     const divider = unitFormat.divider * base;
     if (maxAbsValue % divider !== maxAbsValue) {
       unitFormat = {
@@ -70,7 +72,11 @@ export function getMetricsUnitFormat(unit, metrics) {
   };
 
   metrics.forEach((metric) => {
-    const unitFormat = getUnitFormat(unit, metric.min, metric.max);
+    const unitFormat = getUnitFormat(
+      unit,
+      metric.minimum_value,
+      metric.maximum_value,
+    );
     if (unitFormat.divider > metricUnitFormat.divider) {
       metricUnitFormat = unitFormat;
     }

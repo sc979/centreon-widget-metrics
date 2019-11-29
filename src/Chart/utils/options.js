@@ -15,7 +15,7 @@ export function extractColors(data) {
   });
 }
 
-export function extractYaxis(data) {
+export function extractYaxis(data, stacked, sizeToMax) {
   const units = groupByUnit(data);
 
   if (Object.keys(units).length > 2) {
@@ -44,7 +44,9 @@ export function extractYaxis(data) {
         labels: {
           formatter: (val) => {
             if (typeof val === 'number') {
-              return (val / unitFormat.divider).toFixed(2) + unitFormat.unit;
+              return `${(val / unitFormat.divider).toFixed(2)} ${
+                unitFormat.unit
+              }`;
             }
             return null;
           },
@@ -53,10 +55,12 @@ export function extractYaxis(data) {
         show: metricIndex === 0,
         seriesName,
         opposite: unitIndex !== 0,
-        //min: limits.min,
-        //max: limits.max,
-        title: metrics.length === 1 ? { text: metric.metric } : {},
       };
+
+      if (!stacked && sizeToMax) {
+        yAxis[metric.index].min = limits.min;
+        yAxis[metric.index].max = limits.max;
+      }
     });
   });
 
@@ -79,6 +83,9 @@ export function getGeneralOptions() {
     },
     dataLabels: {
       enabled: false,
+    },
+    legend: {
+      showForSingleSeries: true,
     },
     stroke: {
       width: 1,
