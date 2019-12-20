@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
+
 import { renderToString } from 'react-dom/server';
-import Apex from 'apexcharts';
+import { utcToZonedTime, zonedTimeToUtc } from 'date-fns-tz';
 import ApexChart from 'react-apexcharts';
 import StatusIcon from '@material-ui/icons/ViewArray';
 import AcknowledgeIcon from '@material-ui/icons/EmojiPeople';
 import DowntimeIcon from '@material-ui/icons/Gavel';
 import StackedIcon from '@material-ui/icons/HorizontalSplit';
 import DownloadSvgIcon from '@material-ui/icons/PhotoOutlined';
+
 import {
   getGeneralOptions,
   getLocale,
@@ -18,6 +20,7 @@ import extractSeries from './utils/series';
 
 function Chart({
   widgetId,
+  timezone,
   title,
   data,
   onPeriodChange,
@@ -52,7 +55,7 @@ function Chart({
       data.global.multiple_services === 0 &&
       Object.keys(groupByUnit(data)).length === 1;
     setStacked(isStacked);
-    setSeries(extractSeries(data, isStacked));
+    setSeries(extractSeries(data, isStacked, timezone));
   }, [data, displayStacked]);
 
   options.title = { text: title, align: 'center' };
@@ -237,8 +240,13 @@ function Chart({
 
   options.chart.events.beforeZoom = (chartContext, { xaxis }) => {
     setSeries([]);
-    const start = Math.floor(xaxis.min / 1000);
-    const end = Math.floor(xaxis.max / 1000);
+
+    const zonedStart = zonedTimeToUtc(new Date(xaxis.min), timezone).getTime();
+    const zonedEnd = zonedTimeToUtc(new Date(xaxis.max), timezone).getTime();
+
+    const start = Math.floor(zonedStart / 1000);
+    const end = Math.floor(zonedEnd / 1000);
+
     onPeriodChange(start, end);
   };
 

@@ -1,6 +1,8 @@
+import { utcToZonedTime } from 'date-fns-tz';
+
 import { orderMetrics } from './metrics';
 
-function extractSeries(data, stacked) {
+function extractSeries(data, stacked, timezone) {
   const formattedSeries = [];
 
   orderMetrics(data.metrics).forEach((metric) => {
@@ -9,7 +11,8 @@ function extractSeries(data, stacked) {
       type: stacked ? 'area' : 'line',
       unit: metric.unit,
       data: metric.data.map((item, index) => {
-        return [data.times[index] * 1000, item];
+        const zonedDate = utcToZonedTime(data.times[index] * 1000, timezone);
+        return [zonedDate, item];
       }),
     });
   });

@@ -110,8 +110,8 @@ export function getGeneralOptions() {
       x: {
         show: true,
         formatter: (timestamp) => {
-          const DateToFormat = new Date(timestamp);
-          return `${DateToFormat.toLocaleDateString()} ${DateToFormat.toLocaleTimeString()}`;
+          const date = new Date(timestamp);
+          return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
         },
       },
       onDatasetHover: {

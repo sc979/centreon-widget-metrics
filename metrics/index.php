@@ -33,13 +33,13 @@
  *
  */
 
-require_once "../require.php";
-require_once $centreon_path . 'bootstrap.php';
-require_once $centreon_path . 'www/class/centreon.class.php';
-require_once $centreon_path . 'www/class/centreonSession.class.php';
-require_once $centreon_path . 'www/class/centreonWidget.class.php';
-require_once $centreon_path . 'www/class/centreonUser.class.php';
-require_once $centreon_path . 'www/class/centreonACL.class.php';
+require_once __DIR__ . '/../../../bootstrap.php';
+require_once __DIR__ . '/../../class/centreon.class.php';
+require_once __DIR__ . '/../../class/centreonSession.class.php';
+require_once __DIR__ . '/../../class/centreonWidget.class.php';
+require_once __DIR__ . '/../../class/centreonUser.class.php';
+require_once __DIR__ . '/../../class/centreonACL.class.php';
+require_once __DIR__ . '/../../class/centreonGMT.class.php';
 
 $pearDB = $dependencyInjector['configuration_db'];
 
@@ -55,10 +55,16 @@ if (!isset($_REQUEST['widgetId'])) {
 $centreon = $_SESSION['centreon'];
 $widgetId = $_REQUEST['widgetId'];
 
+// get user timezone
+$gmt = new CentreonGMT();
+$gmt->getMyGTMFromUser($centreon->user->user_id);
+$userTimezone = $gmt->getMyTimezone();
+
 $path = $centreon_path . 'www/widgets/metrics/';
 $template = new Smarty();
 $template = initSmartyTplForPopup($path, $template, "/", $centreon_path);
 
 $template->assign('widgetId', $widgetId);
+$template->assign('userTimezone', $userTimezone);
 
 $template->display('index.html');

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Chart from './Chart';
 
-function App({ widgetId }) {
+function App({ widgetId, timezone }) {
   // run legacy method from centreon web to resize iframe's height
   window.parent.iResize(window.name, 280);
 
@@ -123,6 +123,7 @@ function App({ widgetId }) {
       {metricsData && (
         <Chart
           widgetId={widgetId}
+          timezone={timezone}
           title={title}
           data={metricsData}
           onPeriodChange={handlePeriodChange}
