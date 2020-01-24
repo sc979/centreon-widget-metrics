@@ -52,7 +52,7 @@ function Chart({
   useEffect(() => {
     const isStacked =
       displayStacked &&
-      data.global.multiple_services === 0 &&
+      data.global.multiple_services === false &&
       Object.keys(groupByUnit(data)).length === 1;
     setStacked(isStacked);
     setSeries(extractSeries(data, isStacked, timezone));
@@ -80,7 +80,7 @@ function Chart({
   };
 
   options.chart.toolbar.tools.customIcons = [];
-  if (data.global.multiple_services === 0) {
+  if (data.global.multiple_services === false) {
     options.chart.toolbar.tools.customIcons.push({
       icon: renderToString(
         <StatusIcon
@@ -88,7 +88,7 @@ function Chart({
           style={{ color: displayStatus ? '#008FFB' : '#6E8192' }}
         />,
       ),
-      index: 1,
+      index: options.chart.toolbar.tools.customIcons.length,
       title: 'display status',
       class: 'custom-icon',
       click: () => {
@@ -104,7 +104,7 @@ function Chart({
             style={{ color: displayStacked ? '#008FFB' : '#6E8192' }}
           />,
         ),
-        index: 2,
+        index: options.chart.toolbar.tools.customIcons.length,
         title: 'stacked',
         class: 'custom-icon',
         click: () => {
@@ -120,7 +120,7 @@ function Chart({
           style={{ color: displayAcknowledgements ? '#008FFB' : '#6E8192' }}
         />,
       ),
-      index: 3,
+      index: options.chart.toolbar.tools.customIcons.length,
       title: 'display acknowledgements',
       class: 'custom-icon',
       click: () => {
@@ -135,7 +135,7 @@ function Chart({
           style={{ color: displayDowntimes ? '#008FFB' : '#6E8192' }}
         />,
       ),
-      index: 4,
+      index: options.chart.toolbar.tools.customIcons.length,
       title: 'display downtimes',
       class: 'custom-icon',
       click: () => {
@@ -148,7 +148,7 @@ function Chart({
     icon: renderToString(
       <DownloadSvgIcon fontSize="small" style={{ color: '#6E8192' }} />,
     ),
-    index: 5,
+    index: options.chart.toolbar.tools.customIcons.length,
     title: 'export to png',
     class: 'custom-icon',
     click: async (chartContext) => {
@@ -197,7 +197,7 @@ function Chart({
 
   useEffect(() => {
     let calculatedAknowledgement = [];
-    if (displayAcknowledgements && data.global.multiple_services === 0) {
+    if (displayAcknowledgements && data.global.multiple_services === false) {
       calculatedAknowledgement = data.acknowledge.map((acknowledge) => ({
         x: acknowledge.start * 1000,
         strokeDashArray: 5,
@@ -218,7 +218,7 @@ function Chart({
 
   useEffect(() => {
     let calculatedDowntimes = [];
-    if (displayDowntimes && data.global.multiple_services === 0) {
+    if (displayDowntimes && data.global.multiple_services === false) {
       calculatedDowntimes = data.downtime.map((downtime, index) => ({
         x: downtime.start * 1000,
         x2: downtime.end * 1000,
