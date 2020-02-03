@@ -75,7 +75,7 @@ function App({ widgetId, timezone }) {
 
     const { services, metrics, start, end } = dataParams;
     if (
-      metricsData.global.multiple_services === 0 &&
+      metricsData.global.multiple_services === false &&
       services.split(',').length === 1 &&
       metrics.length === 0
     ) {
