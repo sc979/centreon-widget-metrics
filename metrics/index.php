@@ -53,7 +53,11 @@ if (!isset($_REQUEST['widgetId'])) {
     exit;
 }
 $centreon = $_SESSION['centreon'];
-$widgetId = $_REQUEST['widgetId'];
+
+$widgetId = filter_var($_REQUEST['widgetId'], FILTER_VALIDATE_INT);
+if ($widgetId === false) {
+    throw new InvalidArgumentException('Widget ID must be an integer');
+}
 
 // get user timezone
 $gmt = new CentreonGMT();
